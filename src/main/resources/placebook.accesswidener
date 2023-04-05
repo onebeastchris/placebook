@@ -1,0 +1,4 @@
+accessWidener v1 named
+
+# to access Entry#getProfile
+accessible method net/minecraft/util/UserCache$Entry getProfile ()Lcom/mojang/authlib/GameProfile;
