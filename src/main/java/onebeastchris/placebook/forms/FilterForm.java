@@ -42,7 +42,7 @@ public class FilterForm implements FormInterface{
             parsed.add("Filtering Options");
             parsed.add("Select which players to show");
             parsed.add("Search for a player");
-            parsed.add(args[0]);
+            parsed.add("searching for: " + args[0]);
             return parsed;
         }
     }
