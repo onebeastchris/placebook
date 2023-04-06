@@ -8,6 +8,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -55,7 +57,6 @@ public class PlayerStorage {
         NbtCompound nbt = new NbtCompound();
         NbtList homes = new NbtList();
         nbt.put("homes", homes);
-
         return nbt;
     }
 

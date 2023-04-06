@@ -1,32 +1,35 @@
 package onebeastchris.placebook.forms;
 
+import net.minecraft.server.network.ServerPlayerEntity;
 import onebeastchris.placebook.PlaceBook;
+import onebeastchris.placebook.command.PlacesCommand;
+import onebeastchris.placebook.util.FloodgateUtil;
 import onebeastchris.placebook.util.PlayerDataCache;
 import org.geysermc.cumulus.form.SimpleForm;
 import org.geysermc.cumulus.util.FormImage;
-import org.geysermc.floodgate.api.player.FloodgatePlayer;
 
 import java.util.UUID;
 
-public class MainForm {
+public class MainForm implements FormInterface {
 
-    public static SimpleForm.Builder mainForm(UUID uuid, FloodgatePlayer player) {
-        String path = PlayerDataCache.TEXTURES.get(uuid).getCachedHeadPath();
-        PlaceBook.debug("Path: " + path);
+    public static SimpleForm.Builder sendForm(ServerPlayerEntity player) {
+        String url = PlayerDataCache.TEXTURES.get(player.getUuid()).getAvatarUrl();
         return SimpleForm.builder()
                 .title("PlaceBook")
-                .button("Your Places", FormImage.Type.PATH, path)
+                .button("Your Places", FormImage.Type.URL, url)
                 .button("Players")
-                .button("Places")
+                .optionalButton("Places", false) //TODO: add places
                 .validResultHandler((form, response) -> {
                     switch (response.clickedButtonId()) {
-                        case 1:
+                        case 0:
+                            PlaceBook.debug("why are you complaining");
                             //player.sendForm(PlayersForm.playersForm(uuid, player));
                             break;
-                        case 2:
-                            //player.sendForm(PlacesForm.placesForm(uuid, player));
+                        case 1:
+                            //PlayerListForm
+                            FloodgateUtil.sendForm(player, PlayerListForm.sendForm(player, form).build());
                             break;
-                        case 3:
+                        case 2:
                             //player.sendForm(YourPlacesForm.yourPlacesForm(uuid, player));
                             break;
                     }

@@ -3,6 +3,7 @@ package onebeastchris.placebook.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import onebeastchris.placebook.PlaceBook;
+import onebeastchris.placebook.skin.Heads;
 import org.apache.commons.io.FileUtils;
 
 import javax.imageio.ImageIO;
@@ -16,6 +17,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,6 +28,7 @@ public class WebUtils {
     private static final String MOJANG_PROFILE = "https://sessionserver.mojang.com/session/minecraft/profile/";
     private static final String GEYSER_SKIN_API = "https://api.geysermc.org/v2/skin/";
     private static final String GEYSER_API = "https://api.geysermc.org/v2/xbox/xuid/";
+
     private static JsonObject webRequest(String url) {
         var client = newHttpClient();
         var request = HttpRequest.newBuilder()
@@ -45,19 +48,20 @@ public class WebUtils {
 
     public static String getTextureID(UUID uuid) {
         if (FloodgateUtil.isFloodgatePlayer(uuid) || uuid.version() == 0) {
-            if (FloodgateUtil.isLinked(uuid)) {
-                return getJavaTexture(uuid);
+            if (!FloodgateUtil.isLinked(uuid)) {
+                PlaceBook.debug("Player is linked to bedrock account, using java texture id");
+                return getBedrockTexture(uuid);
             }
-            return getBedrockTexture(uuid);
-        } else {
-            return getJavaTexture(uuid);
         }
+        return getJavaTexture(uuid);
     }
 
     private static String getBedrockTexture(UUID uuid) {
         String xuid = FloodgateUtil.getXuid(uuid);
         if (xuid == null) {
-            return null;
+            //needed when player is offline
+            xuid = getXuid(uuid);
+            assert xuid != null;
         }
         JsonObject json = webRequest(GEYSER_SKIN_API + xuid);
         PlaceBook.debug("json from BEDROCK texture id web request: " + json);
@@ -65,7 +69,17 @@ public class WebUtils {
             PlaceBook.LOGGER.error("Error while getting skin for " + uuid + ": " + json.get("message").getAsString());
             return null;
         }
-        return json.get("texture_id").getAsString();
+        //this one is not base64 encoded...
+        String texture_id = json.get("texture_id").getAsString();
+        return Heads.getEncodedTexture(texture_id);
+    }
+
+    public static String getXuid(UUID uuid) {
+        try {
+            return webRequest(GEYSER_API + uuid.toString().replace("-", "")).get("xuid").getAsString();
+        } catch (Exception e){
+            return null;
+        }
     }
 
     private static String getJavaTexture(UUID uuid) {
@@ -76,19 +90,21 @@ public class WebUtils {
             PlaceBook.LOGGER.error("Error while getting skin for " + uuid + ": " + json.get("message").getAsString());
             return null;
         }
+        //this one is base64 encoded... yeeeeeeeeeeeeeeeeeeeeeeah
         return texture_id;
     }
 
-    public static String handleAvatarCache(UUID uuid, String textureId) {
+    public static String handleAvatarCache(UUID uuid, String textureId, String mcTexture) {
         //check if cached skin exists; if it does, see for how long - upon player join, new skin check
         final String TydiumAPIPath = "https://api.tydiumcraft.net/v1/players/skin?uuid=";
         final String apiType = "&type=avatar";
         final Path cachePath = PlaceBook.paths.getCacheDir();
 
-        int texturehash = textureId.hashCode();
-        String cachedHeadPath = uuid.toString() + "+" + texturehash + ".png";
+        int texturehash = mcTexture.hashCode();
 
-        File imageFile = cachePath.resolve(cachedHeadPath).toFile();
+        String fileName = uuid.toString() + "+" + texturehash + ".png";
+
+        File imageFile = cachePath.resolve(fileName).toFile();
         PlaceBook.debug("checking for skin file for " + uuid.toString() + " at " + imageFile.getAbsolutePath());
 
         if (imageFile.exists()) {
@@ -101,7 +117,7 @@ public class WebUtils {
             for (File file : Objects.requireNonNull(cachePath.toFile().listFiles())) {
                 if (file.getName().startsWith(uuid.toString())) {
                     try {
-                        PlaceBook.debug("deleting old skin file for " + uuid.toString() + "+" +file.getAbsolutePath());
+                        PlaceBook.debug("deleting old skin file for " + uuid.toString() + " at " +file.getAbsolutePath());
                         FileUtils.forceDelete(file);
                     } catch (IOException e) {
                         PlaceBook.LOGGER.error("failed to delete old skin file for " + uuid.toString() + e);
@@ -128,10 +144,20 @@ public class WebUtils {
                 imageFile.createNewFile();
                 ImageIO.write(image, "png", imageFile);
             } catch (IOException e) {
-                PlaceBook.LOGGER.error("skin download for " + uuid.toString() + "failed" + e);
+                PlaceBook.LOGGER.error("skin download for " + uuid.toString() + " failed " + e);
             }
         }
 
-        return cachedHeadPath;
+        return imageFile.getAbsolutePath();
+    }
+
+    public static String getTexture(String encoded) {
+        var a= Base64.getDecoder().decode(encoded);
+        JsonObject json = new Gson().fromJson(new String(a), JsonObject.class);
+        return json.get("textures").getAsJsonObject().get("SKIN").getAsJsonObject().get("url").getAsString();
+    }
+
+    public static String getAvatarUrl(UUID uuid) {
+        return "https://api.tydiumcraft.net/v1/players/skin?uuid=" + uuid + "&{type=avatar}";
     }
 }

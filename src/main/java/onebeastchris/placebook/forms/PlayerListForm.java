@@ -1,80 +1,70 @@
 package onebeastchris.placebook.forms;
 
 import com.mojang.authlib.GameProfile;
-import onebeastchris.placebook.util.PlayerDataCache;
+import net.minecraft.server.network.ServerPlayerEntity;
+import onebeastchris.placebook.util.FloodgateUtil;
 import org.geysermc.cumulus.component.ButtonComponent;
 import org.geysermc.cumulus.form.Form;
 import org.geysermc.cumulus.form.SimpleForm;
-import org.geysermc.cumulus.util.FormImage;
-import org.geysermc.floodgate.api.player.FloodgatePlayer;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-public class PlayerListForm {
-    public static SimpleForm.Builder getPlayerListForm(boolean onlyOnline, @Nullable String search, Form previousForm, FloodgatePlayer player) {
-        return SimpleForm.builder()
-                .title("Player List")
-                .content("This is a list of all players on the server.")
-                .button("Online Players")
-                .button("Offline Players")
-                .button("Search")
-                .button("Back")
-                .validResultHandler((response) -> {
-                    switch (response.clickedButtonId()) {
-                        case 0 -> {
-                            //online players
-                        }
-                        case 1 -> {
-                            //offline players
-                        }
-                        case 2 -> {
-                            //search
-                        }
-                        case 3 -> {
-                            //back
-                            player.sendForm(previousForm);
-                        }
-                    }
-                })
-                .closedOrInvalidResultHandler((response) -> {
+public class PlayerListForm implements FormInterface {
+    public static SimpleForm.Builder sendForm(ServerPlayerEntity player, Form previousForm, String... args) {
+        List<String> parsed = parseArgs(args);
+        int filter = Integer.parseInt(parsed.get(0));
+        String searchParam = parsed.get(1);
 
-                });
-    }
-
-    private static SimpleForm.Builder getAllPlayersForm() {
-        return SimpleForm.builder()
-                .title("Online Players")
-                .content("This is a list of all online players on the server.")
-                .button("Back")
-                .validResultHandler((response) -> {
-                    switch (response.clickedButtonId()) {
-                        case 0 -> {
-                            //back
-                        }
+        SimpleForm.Builder playerlistform = SimpleForm.builder()
+                .title(parsed.get(2))
+                .content(parsed.get(3))
+                .button("Filter/Search")
+                .validResultHandler((form, response) -> {
+                    if (response.clickedButtonId() == 0) {
+                        FloodgateUtil.sendForm(player, FilterForm.sendForm(player, previousForm, searchParam).build()); //handle filter call
+                    } else if (response.clickedButton().text().equals("Back")) {
+                        FloodgateUtil.sendForm(player, previousForm); //handle back call
+                    } else {
+                        //call places form
                     }
                 });
-    }
 
-    private static SimpleForm.Builder getOnlinePlayers() {
-        SimpleForm.Builder simpleform = SimpleForm.builder()
-                .title("Offline Players")
-                .content("This is a list of all offline players on the server.")
-                .validResultHandler((response) -> {
-                    switch (response.clickedButtonId()) {
-                        case 0 -> {
-                            //back
-                        }
-                    }
-                });
-        var a = ButtonComponentUtil.getButtonComponent(1, null);
-        for (ButtonComponent button : a) {
-            simpleform.button(button);
+        HashMap<ButtonComponent, GameProfile> buttons = ButtonComponentUtil.getButtonComponent(filter, searchParam);
+        for (ButtonComponent button : buttons.keySet()) {
+            playerlistform.button(button);
         }
-        //add buttons
-        return simpleform;
+        playerlistform.button("Back");
+        return playerlistform;
     }
 
+    private static List<String> parseArgs(String... args) {
+        List<String> parsed = new ArrayList<>();
+        if (args.length == 0) {
+            parsed.add("0"); //default: load all players
+            parsed.add(""); //default: no search param
+            parsed.add("Showing all players");
+            parsed.add("You can search or filter for players.");
+        } else {
+            parsed.add(args[0]); //which toggle?
+            parsed.add(args[1]); //search param, if present
+            parsed.add("Showing " + parseInt(args[0])); //title
+            if (args[1].equals("")) {
+                parsed.add("You can search for a player name!"); //content
+            } else {
+                parsed.add("Searching for \"" + args[1] + "\""); //content
+            }
+        }
+        return parsed;
+    }
 
+    private static String parseInt(String filter) {
+        return switch (filter) {
+            case "1" -> "online players";
+            case "2" -> "offline players";
+            default -> "all players";
+        };
+    }
 
 }

@@ -12,11 +12,13 @@ import java.util.concurrent.CompletableFuture;
 @Data
 public class SkinUtil {
     private ItemStack head;
-    private final Path cachePath = PlaceBook.paths.getCacheDir();
-    private String cachedHeadPath;
+    //private final Path cachePath = PlaceBook.paths.getCacheDir();
+    //private String cachedHeadPath;
     private UUID uuid;
     private String name;
     private String textureId;
+
+    private String avatarUrl;
 
     public SkinUtil() {
 
@@ -27,8 +29,10 @@ public class SkinUtil {
             this.uuid = gameProfile.getId();
             this.name = gameProfile.getName();
             textureId = WebUtils.getTextureID(this.uuid);
-            head = Heads.getHead(gameProfile.getName(), Heads.getEncodedTexture(this.textureId));
-            cachedHeadPath = WebUtils.handleAvatarCache(this.uuid, textureId);
-    });
+            head = Heads.getHead(gameProfile.getName(), textureId);
+            this.avatarUrl = WebUtils.getAvatarUrl(this.uuid);
+            //mcTexture = WebUtils.getTexture(textureId);
+            //cachedHeadPath = WebUtils.handleAvatarCache(this.uuid, textureId, mcTexture);
+        });
     }
 }

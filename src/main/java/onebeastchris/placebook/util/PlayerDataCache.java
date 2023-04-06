@@ -57,22 +57,15 @@ public class PlayerDataCache {
         return Optional.ofNullable(onlineCache.get(gameProfile));
     }
 
-    public static List<GameProfile> getAllPlayers(String name) {
+    public static List<GameProfile> getAllPlayers() {
         List<GameProfile> allPlayers = new ArrayList<>(onlineCache.keySet());
         allPlayers.addAll(offlineCache.keySet());
-        if (name != null) {
-            allPlayers.removeIf(gameProfile -> !gameProfile.getName().toLowerCase().contains(name.toLowerCase()));
-        }
         return allPlayers;
     }
 
     public static void addToTextureCache(GameProfile gameProfile) {
         var skinUtil = new SkinUtil();
-        try {
-            skinUtil.fill(gameProfile).get();
-            TEXTURES.put(gameProfile.getId(), skinUtil);
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        CompletableFuture<Void> a = skinUtil.fill(gameProfile);
+        a.thenRun(() -> TEXTURES.put(gameProfile.getId(), skinUtil));
     }
 }

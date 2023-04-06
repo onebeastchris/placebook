@@ -1,6 +1,7 @@
 package onebeastchris.placebook.util;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import onebeastchris.placebook.PlaceBook;
 import org.geysermc.cumulus.form.Form;
 import org.geysermc.floodgate.api.FloodgateApi;
@@ -36,7 +37,7 @@ public class FloodgateUtil {
         return false;
     }
 
-    public static void sendForm (PlayerEntity player, Form form) {
+    public static void sendForm (ServerPlayerEntity player, Form form) {
         if (isFloodgatePlayer(player)) {
             FloodgateApi.getInstance().sendForm(player.getUuid(), form);
         }

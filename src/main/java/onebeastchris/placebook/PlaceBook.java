@@ -23,8 +23,6 @@ public class PlaceBook implements ModInitializer {
 
 		LOGGER.info("Loading PlaceBook");
 		Register.registerAll();
-
-		paths = new FileUtil();
 	}
 
 	public static void debug(String message) {

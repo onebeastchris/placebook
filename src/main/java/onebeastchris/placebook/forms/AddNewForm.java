@@ -11,9 +11,9 @@ import org.geysermc.floodgate.api.player.FloodgatePlayer;
 import java.util.Arrays;
 import java.util.List;
 
-public class AddNewForm {
-    public static CustomForm.Builder getAddNewForm(ServerPlayerEntity player, Form previousForm, FloodgatePlayer fplayer, String... args) {
-        List<String> argsList = getArgs(args);
+public class AddNewForm implements FormInterface{
+    public static CustomForm.Builder sendForm(ServerPlayerEntity player, Form previousForm, String... args) {
+        List<String> argsList = parseArgs(args);
         boolean isPrivate = argsList.get(2).equals("private");
         return CustomForm.builder()
                 .title(argsList.get(0))
@@ -24,19 +24,19 @@ public class AddNewForm {
                     // do nothing
                 })
                 .invalidResultHandler((response) -> {
-                    FloodgateUtil.sendForm(player, getAddNewForm(player, previousForm, fplayer, "Invalid entries!").build());
+                    FloodgateUtil.sendForm(player, sendForm(player, previousForm,  "Invalid entries!").build());
                 })
                 .validResultHandler((response) -> {
                     String name = response.asInput(0);
                     boolean isPublic = response.asToggle(1);
                     String description = response.asInput(2);
-                    PlayerStorage.addNewHome(player, player.getBlockPos(), player.getWorld().getRegistryKey().toString(), name, description, isPublic, 0);
+                    PlayerStorage.addNewHome(player, player.getBlockPos(), player.getWorld().getDimensionKey().toString(), name, description, isPublic, 0);
                     //send players back to previous form
-                    fplayer.sendForm(previousForm);
+                    FloodgateUtil.sendForm(player, previousForm);
                 });
     }
 
-    private static List<String> getArgs(String... args) {
+    private static List<String> parseArgs(String... args) {
         String[] def = {"Add New Place", "Put a name here", "visible", "Put a description here"};
         if (args.length == 0) {
             return Arrays.asList(def);
@@ -51,7 +51,7 @@ public class AddNewForm {
         }
     }
 
-    public static CustomForm.Builder editHome(ServerPlayerEntity player, Form previousForm, FloodgatePlayer fplayer, NbtCompound nbt, String... args) {
-        return getAddNewForm(player, previousForm, fplayer, "Edit:", nbt.getString("name"), nbt.getBoolean("isPublic") ? "visible" : "private", nbt.getString("description"));
+    public static CustomForm.Builder editHome(ServerPlayerEntity player, Form previousForm, NbtCompound nbt, String... args) {
+        return sendForm(player, previousForm,  "Edit:", nbt.getString("name"), nbt.getBoolean("isPublic") ? "visible" : "private", nbt.getString("description"));
     }
 }
