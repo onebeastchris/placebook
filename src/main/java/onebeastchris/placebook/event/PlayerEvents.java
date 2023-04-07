@@ -7,13 +7,13 @@ public class PlayerEvents {
 
     public static void registerJoinEvent() {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            PlayerDataCache.update(handler.player, true);
+            PlayerDataCache.updateStatus(handler.player, true);
         });
     }
 
     public static void registerLeaveEvent() {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            PlayerDataCache.update(handler.player, false);
+            PlayerDataCache.updateStatus(handler.player, false);
         });
     }
 

@@ -13,9 +13,11 @@ import java.util.List;
 
 public class PlayerListForm implements FormInterface {
     public static SimpleForm.Builder sendForm(ServerPlayerEntity player, Form previousForm, String... args) {
+
         List<String> parsed = parseArgs(args);
         int filter = Integer.parseInt(parsed.get(0));
         String searchParam = parsed.get(1);
+        HashMap<ButtonComponent, GameProfile> buttons = ButtonComponentUtil.getPlayers(filter, searchParam);
 
         SimpleForm.Builder playerlistform = SimpleForm.builder()
                 .title(parsed.get(2))
@@ -27,11 +29,10 @@ public class PlayerListForm implements FormInterface {
                     } else if (response.clickedButton().text().equals("Back")) {
                         FloodgateUtil.sendForm(player, previousForm); //handle back call
                     } else {
-                        //call places form
+                        FloodgateUtil.sendForm(player, PlacesForm.sendForm(player, form, buttons.get(response.clickedButton())).build());
                     }
                 });
 
-        HashMap<ButtonComponent, GameProfile> buttons = ButtonComponentUtil.getButtonComponent(filter, searchParam);
         for (ButtonComponent button : buttons.keySet()) {
             playerlistform.button(button);
         }

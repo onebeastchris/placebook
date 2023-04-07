@@ -30,6 +30,7 @@ public class WebUtils {
     private static final String GEYSER_API = "https://api.geysermc.org/v2/xbox/xuid/";
 
     private static JsonObject webRequest(String url) {
+        PlaceBook.debug("Sending request to " + url);
         var client = newHttpClient();
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -49,7 +50,7 @@ public class WebUtils {
     public static String getTextureID(UUID uuid) {
         if (FloodgateUtil.isFloodgatePlayer(uuid) || uuid.version() == 0) {
             if (!FloodgateUtil.isLinked(uuid)) {
-                PlaceBook.debug("Player is linked to bedrock account, using java texture id");
+                PlaceBook.debug("Bedrock player is not linked to java account, using bedrock texture id");
                 return getBedrockTexture(uuid);
             }
         }
@@ -61,7 +62,6 @@ public class WebUtils {
         if (xuid == null) {
             //needed when player is offline
             xuid = getXuid(uuid);
-            assert xuid != null;
         }
         JsonObject json = webRequest(GEYSER_SKIN_API + xuid);
         PlaceBook.debug("json from BEDROCK texture id web request: " + json);
@@ -75,11 +75,7 @@ public class WebUtils {
     }
 
     public static String getXuid(UUID uuid) {
-        try {
-            return webRequest(GEYSER_API + uuid.toString().replace("-", "")).get("xuid").getAsString();
-        } catch (Exception e){
-            return null;
-        }
+        return String.valueOf(uuid.getLeastSignificantBits());
     }
 
     private static String getJavaTexture(UUID uuid) {

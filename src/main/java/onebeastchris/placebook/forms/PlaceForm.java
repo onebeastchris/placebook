@@ -14,11 +14,12 @@ import java.util.List;
 import java.util.Objects;
 
 public class PlaceForm implements FormInterface{
-    public static SimpleForm.Builder sendForm(ServerPlayerEntity player, Form previousForm, NbtCompound place) {
+    public static SimpleForm.Builder sendForm(ServerPlayerEntity player, Form previousForm, NbtCompound place, boolean canEdit) {
         List<String> args = parseArgs(place, player);
         return SimpleForm.builder()
                 .title(args.get(0))
                 .content(args.get(1))
+                .optionalButton("Edit", canEdit)
                 .button("Back")
                 .validResultHandler((response) -> {
                     FloodgateUtil.sendForm(player, previousForm);
@@ -35,7 +36,7 @@ public class PlaceForm implements FormInterface{
         String x = posList.getString(0);
         String y = posList.getString(1);
         String z = posList.getString(2);
-        String world = posList.getString(3);
+        String world = place.getString("world");
 
         String location = x + " " + y + " " + z + " in world named" + world;
 

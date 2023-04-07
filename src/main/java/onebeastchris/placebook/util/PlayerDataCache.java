@@ -18,7 +18,7 @@ public class PlayerDataCache {
 
     public static final HashMap<UUID, SkinUtil> TEXTURES = new HashMap<>();
 
-    public static void update(ServerPlayerEntity player, boolean isOnline) {
+    public static void updateStatus(ServerPlayerEntity player, boolean isOnline) {
         UUID uuid = player.getUuid();
         GameProfile gameProfile = player.getGameProfile();
         if (isOnline) {
@@ -31,13 +31,19 @@ public class PlayerDataCache {
         }
     }
 
+    public static void updateCache(ServerPlayerEntity player) {
+        PlaceBook.debug("Updating Cache for player: " + player.getGameProfile().getName() + "");
+        GameProfile gameProfile = player.getGameProfile();
+        onlineCache.put(gameProfile, PlayerStorage.getOrCreate(player));
+    }
+
     public static void loadAll(MinecraftServer server) {
         // Load all players from the user cache
         var a = server.getUserCache().load();
         for (var entry : a) {
             GameProfile gameProfile = entry.getProfile();
             if (gameProfile != null) {
-                PlaceBook.LOGGER.debug("Loading player: " + gameProfile.getName());
+                PlaceBook.debug("Loading player: " + gameProfile.getName());
                 Optional<NbtCompound> optional = PlayerStorage.getOfflinePlayer(gameProfile.getId(), server);
                 optional.ifPresent(nbtCompound -> offlineCache.put(gameProfile, nbtCompound));
                 addToTextureCache(gameProfile);
@@ -53,8 +59,13 @@ public class PlayerDataCache {
         return new ArrayList<>(offlineCache.keySet());
     }
 
-    public static Optional<NbtCompound> getOnlinePlayer(GameProfile gameProfile) {
-        return Optional.ofNullable(onlineCache.get(gameProfile));
+    public static NbtCompound getPlayer(GameProfile gameProfile) {
+        if (onlineCache.containsKey(gameProfile)) {
+            return onlineCache.get(gameProfile);
+        } else if (offlineCache.containsKey(gameProfile)) {
+            return offlineCache.get(gameProfile);
+        }
+        return null;
     }
 
     public static List<GameProfile> getAllPlayers() {

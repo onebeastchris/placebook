@@ -22,8 +22,8 @@ public class MainForm implements FormInterface {
                 .validResultHandler((form, response) -> {
                     switch (response.clickedButtonId()) {
                         case 0:
-                            PlaceBook.debug("why are you complaining");
-                            //player.sendForm(PlayersForm.playersForm(uuid, player));
+                            //YourPlacesForm
+                            FloodgateUtil.sendForm(player, PlacesForm.sendForm(player, form, player.getGameProfile()).build());
                             break;
                         case 1:
                             //PlayerListForm

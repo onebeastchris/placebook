@@ -1,16 +1,18 @@
 package onebeastchris.placebook.forms;
 
 import com.mojang.authlib.GameProfile;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import onebeastchris.placebook.util.PlayerDataCache;
 import org.geysermc.cumulus.component.ButtonComponent;
 import org.geysermc.cumulus.util.FormImage;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class ButtonComponentUtil {
-    public static HashMap<ButtonComponent, GameProfile> getButtonComponent(Integer filter, String search) {
+    public static HashMap<ButtonComponent, GameProfile> getPlayers(Integer filter, String search) {
         HashMap<ButtonComponent, GameProfile> buttonMap = new HashMap<>();
         switch (filter) {
             case 0 -> {
@@ -57,4 +59,5 @@ public class ButtonComponentUtil {
         }
         return buttons;
     }
+
 }
