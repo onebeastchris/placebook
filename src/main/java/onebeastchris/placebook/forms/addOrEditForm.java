@@ -6,6 +6,7 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import onebeastchris.placebook.PlaceBook;
+import onebeastchris.placebook.util.ColorUtil;
 import onebeastchris.placebook.util.FloodgateUtil;
 import onebeastchris.placebook.util.PlayerDataCache;
 import onebeastchris.placebook.util.PlayerStorage;
@@ -43,7 +44,12 @@ public class addOrEditForm implements FormInterface{
                         FloodgateUtil.sendForm(player, sendForm(player, previousForm, nbtCompound, "Invalid position!").build());
                         return;
                     }
-                    PlayerStorage.addNewHome(player, position, player.getWorld().getDimensionKey().toString(), name, colors[color], description, !priv);
+                    if (name == null || name.isEmpty()) {
+                        FloodgateUtil.sendForm(player, sendForm(player, previousForm, nbtCompound, "Invalid name!").build());
+                        return;
+                    }
+
+                    PlayerStorage.addNewHome(player, position, player.getWorld().getDimensionKey().toString(), name, ColorUtil.colornames[color], description, !priv);
                     PlayerDataCache.updateCache(player);
                     //send players back to previous form
                     FloodgateUtil.sendForm(player, previousForm); //TODO: send to the correct form?

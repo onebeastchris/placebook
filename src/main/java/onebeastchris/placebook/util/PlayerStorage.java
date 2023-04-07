@@ -8,11 +8,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import onebeastchris.placebook.PlaceBook;
-import onebeastchris.placebook.forms.PlaceForm;
-import onebeastchris.placebook.skin.ColorUtil;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,6 +52,7 @@ public class PlayerStorage {
         place.putString("world", WorldName);
 
         places.add(place);
+        data.put("places", places);
         set(player, data);
     }
 
@@ -94,6 +91,7 @@ public class PlayerStorage {
         place.putString("world", WorldName);
 
         places.set(index, place);
+        data.put("places", places);
         set(player, data);
     }
 

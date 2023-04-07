@@ -7,6 +7,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import onebeastchris.placebook.PlaceBook;
+import onebeastchris.placebook.util.ColorUtil;
 import onebeastchris.placebook.util.FloodgateUtil;
 import onebeastchris.placebook.util.PlayerDataCache;
 import org.geysermc.cumulus.form.Form;
@@ -26,7 +27,6 @@ public class PlacesForm implements FormInterface {
                 .content(parsed.get(1))
                 .validResultHandler((form, response) -> {
                     int buttonId = response.clickedButtonId();
-                    PlaceBook.debug(buttonId + " " + placesList.size());
                     if (buttonId >= placesList.size()) {
                         if (response.clickedButton().text().equals("Add Place")) {
                             FloodgateUtil.sendForm(player, addOrEditForm.sendForm(player, form, null).build());
@@ -34,7 +34,8 @@ public class PlacesForm implements FormInterface {
                             FloodgateUtil.sendForm(player, previousForm);
                         }
                     } else {
-                        FloodgateUtil.sendForm(player, PlaceForm.sendForm(player, form, placesList.get(buttonId), isOwner).build());
+                        int index = placesList.indexOf(placesList.get(buttonId));
+                        FloodgateUtil.sendForm(player, PlaceForm.sendForm(player, form, placesList.get(buttonId), isOwner, index).build());
                     }
                 });
 
@@ -44,9 +45,10 @@ public class PlacesForm implements FormInterface {
             for (NbtElement p : places) {
                 NbtCompound place = (NbtCompound) p;
                 String name = place.getString("name");
+                String color = ColorUtil.colorMap.get(place.getString("color"));
                 boolean show = place.getBoolean("visibility") || isOwner;
                 placesList.add(place);
-                placesform.optionalButton(name, show);
+                placesform.optionalButton(color + name, show);
             }
         }
         placesform.optionalButton("Add Place", isOwner);

@@ -1,9 +1,11 @@
-package onebeastchris.placebook.skin;
+package onebeastchris.placebook.util;
 
 import java.util.HashMap;
 
 public class ColorUtil {
     public static HashMap<String, String> colorMap = new HashMap<>();
+    public static final String[] colorcodes = {"§0", "§1", "§2", "§3", "§4", "§5", "§6", "§8", "§9", "§a", "§b", "§c", "§d", "§e", "§f"};
+    public static final String[] colornames = {"black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple", "gold", "dark_gray", "blue", "green", "aqua", "red", "light_purple", "yellow"};
 
     public ColorUtil() {
         colorMap.put("black", "§0");
