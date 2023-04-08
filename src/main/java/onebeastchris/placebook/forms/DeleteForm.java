@@ -1,6 +1,7 @@
 package onebeastchris.placebook.forms;
 
 import net.minecraft.server.network.ServerPlayerEntity;
+import onebeastchris.placebook.PlaceBook;
 import onebeastchris.placebook.util.FloodgateUtil;
 import onebeastchris.placebook.util.PlayerDataCache;
 import onebeastchris.placebook.util.PlayerStorage;
@@ -11,6 +12,7 @@ import org.geysermc.cumulus.form.SimpleForm;
 public class DeleteForm implements FormInterface {
 
         public static ModalForm.Builder sendForm(ServerPlayerEntity player, Form previousForm, String placeName, int index) {
+            PlaceBook.debug("DeleteForm.sendForm " + placeName + " " + index);
             return ModalForm.builder()
                     .title("Delete Place")
                     .content("Are you sure you want to delete " + placeName + "?")
@@ -19,6 +21,7 @@ public class DeleteForm implements FormInterface {
                     .validResultHandler((form, response) -> {
                         switch (response.clickedButtonId()) {
                             case 0 -> {
+                                //remove place
                                 PlayerStorage.removeHome(player, index);
                                 FloodgateUtil.sendForm(player, previousForm);
                             }

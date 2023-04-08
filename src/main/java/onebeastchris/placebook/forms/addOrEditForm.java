@@ -5,6 +5,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import onebeastchris.placebook.PlaceBook;
 import onebeastchris.placebook.util.ColorUtil;
 import onebeastchris.placebook.util.FloodgateUtil;
@@ -13,6 +14,7 @@ import onebeastchris.placebook.util.PlayerStorage;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.Form;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -20,39 +22,77 @@ import java.util.Objects;
 public class addOrEditForm implements FormInterface{
 
     private static final String[] colors = {"§0black", "§1dark_blue", "§2dark_green", "§3dark_aqua", "§4dark_red", "§5dark_purple", "§6gold", "§8dark_gray", "§9blue", "§agreen", "§baqua", "§cred", "§dlight_purple", "§eyellow"};
-    public static CustomForm.Builder sendForm(ServerPlayerEntity player, Form previousForm, NbtCompound nbtCompound, String... args) {
+
+    public static CustomForm.Builder sendForm(ServerPlayerEntity player, Form previousForm, NbtCompound nbtCompound, int index, List<String> names, String... args) {
+        PlaceBook.debug("addOrEditForm.sendForm() called " + nbtCompound + " " + index + " " + Arrays.toString(args));
         List<String> argsList = parseArgs(nbtCompound, args);
-        boolean isPrivate = argsList.get(2).equals("private");
+        boolean isPublic = argsList.get(2).equals("visible");
+        boolean isEditor = nbtCompound != null;
 
         return CustomForm.builder()
                 .title(argsList.get(0))
                 .input("Name", argsList.get(1))
                 .dropdown("Color", colors)
-                .toggle("Only visible to you?", isPrivate)
+                .toggle("Visible to everyone?", isPublic)
                 .input("Description", argsList.get(3))
                 .input("Position", argsList.get(4))
+                .dropdown("Dimension", "current", "overworld", "nether", "end")
+                .optionalToggle("Keep old description)", true, isEditor)
                 .invalidResultHandler((response) -> {
-                    FloodgateUtil.sendForm(player, sendForm(player, previousForm, nbtCompound, "Invalid entries!").build());
+                    FloodgateUtil.sendForm(player, sendForm(player, previousForm, nbtCompound, index, names,"§4Invalid entries!").build());
                 })
                 .validResultHandler((response) -> {
                     String name = response.next();
-                    int color = response.next();
-                    boolean priv = Boolean.FALSE.equals(response.next());
+                    int color = response.asDropdown();
+                    boolean isVis = Boolean.TRUE.equals(response.next());
                     String description = response.next();
-                    BlockPos position = parsePosition(Objects.requireNonNull(response.next()), player);
-                    if (position == null) {
-                        FloodgateUtil.sendForm(player, sendForm(player, previousForm, nbtCompound, "Invalid position!").build());
-                        return;
-                    }
-                    if (name == null || name.isEmpty()) {
-                        FloodgateUtil.sendForm(player, sendForm(player, previousForm, nbtCompound, "Invalid name!").build());
-                        return;
+                    BlockPos position = parsePosition(Objects.requireNonNull(response.next()), player, nbtCompound);
+                    int dimension = response.asDropdown();
+                    boolean keepOldDescription = Boolean.TRUE.equals(response.next());
+
+                    if (nbtCompound != null) {
+                        NbtCompound edit = PlayerStorage.createHome(name, ColorUtil.colornames[color], description, isVis, position, nbtCompound.getString("dimension"));
+                        if (name == null || name.isEmpty() || name.isBlank()) {
+                            name = nbtCompound.getString("name");
+                            if (name.isEmpty() || name.isBlank()) {
+                                FloodgateUtil.sendForm(player, sendForm(player, previousForm, edit, index, names, "§4Invalid name!").build());
+                                return;
+                            }
+                        } else if (names.contains(name) && !names.get(index).equals(name)) {
+                            FloodgateUtil.sendForm(player, sendForm(player, previousForm, edit, index, names, "§4Place with that name already exists!").build());
+                            return;
+                        } else if (position == null || position.getY() < -64 || position.getY() > 320) {
+                            FloodgateUtil.sendForm(player, sendForm(player, previousForm, edit, index, names, "§4Invalid position!").build());
+                            return;
+                        }
+                        if (keepOldDescription) {
+                            description = nbtCompound.getString("description");
+                        }
+
+                        if (index == -1) {
+                            PlayerStorage.addNewHome(player, position, getDimension(player, dimension), name, ColorUtil.colornames[color], description, isVis);
+                        } else {
+                            PlayerStorage.updateHome(player, index, ColorUtil.colornames[color], name, description, isVis, position, getDimension(player, dimension));
+                        }
+                    } else {
+                        NbtCompound edit = PlayerStorage.createHome(name, ColorUtil.colornames[color], description, isVis, position, getDimension(player, dimension));
+                        if (position == null || position.getY() < -64 || position.getY() > 320) {
+                            FloodgateUtil.sendForm(player, sendForm(player, previousForm, edit, index, names, "§4Invalid position!").build());
+                            return;
+                        }
+                        if (name == null || name.isEmpty()) {
+                            FloodgateUtil.sendForm(player, sendForm(player, previousForm, edit, index, names, "§4Invalid name!").build());
+                            return;
+                        } else if (names.contains(name)) {
+                            FloodgateUtil.sendForm(player, sendForm(player, previousForm, edit, index, names, "§4Place with that name already exists!").build());
+                            return;
+                        }
+                        PlayerStorage.addNewHome(player, position, getDimension(player, dimension), name, ColorUtil.colornames[color], description, isVis);
                     }
 
-                    PlayerStorage.addNewHome(player, position, player.getWorld().getDimensionKey().toString(), name, ColorUtil.colornames[color], description, !priv);
                     PlayerDataCache.updateCache(player);
                     //send players back to previous form
-                    FloodgateUtil.sendForm(player, previousForm); //TODO: send to the correct form?
+                    FloodgateUtil.sendForm(player, previousForm); //TODO: admin mode to edit other players?
                 });
     }
 
@@ -61,42 +101,79 @@ public class addOrEditForm implements FormInterface{
                 "Put a name here", //1
                 "visible", //2
                 "Put an optional description here", //3
-                "Leave empty to use your position. Or: §3100 §360 §3100"}; //4
+                "Empty: Your pos. Or, e.g.: §3-3 §369 §33"}; //4
         if (args.length == 0) {
             return Arrays.asList(def);
         } else {
-            List<String> custom = Arrays.asList(args);
+            List<String> custom = new ArrayList<>();
             if (nbt != null) {
-                custom.set(0, args[0]);
-                custom.set(1, nbt.getString("name"));
-                custom.set(2, nbt.getBoolean("isPublic") ? "visible" : "private");
-                custom.set(3, nbt.getString("description"));
-                NbtList pos = nbt.getList("position", NbtElement.INT_TYPE);
-                custom.set(4, pos.getInt(0) + " " + pos.getInt(1) + " " + pos.getInt(2));
-            } else {
-                custom.addAll(Arrays.asList(args));
-                if (custom.size() < 5) {
-                    custom.addAll(Arrays.asList(def).subList(custom.size(), 5));
+                custom.add(args[0]);
+                custom.add(nbt.getString("name"));
+                custom.add(nbt.getBoolean("visibility") ? "visible" : "private");
+                custom.add(nbt.getString("description"));
+                NbtList pos = nbt.getList("pos", NbtElement.INT_TYPE);
+                if (pos.size() != 3) {
+                    custom.add("");
+                } else {
+                    custom.add(pos.getInt(0) + " " + pos.getInt(1) + " " + pos.getInt(2));
                 }
+
+                for (int i = 0; i < custom.size(); i++) {
+                    if (custom.get(i).isEmpty() || custom.get(i).isBlank()) {
+                        custom.set(i, def[i]);
+                    }
+                }
+            } else {
+                custom.add(args[0]);
+                custom.add(def[1]);
+                custom.add(def[2]);
+                custom.add(def[3]);
+                custom.add(def[4]);
             }
             return custom;
         }
     }
 
-    private static BlockPos parsePosition(String position, ServerPlayerEntity player){
+    private static BlockPos parsePosition(String position, ServerPlayerEntity player, NbtCompound nbt) {
         String[] pos = position.split(" ");
         if (pos.length == 3){
             return new BlockPos(Integer.parseInt(pos[0]), Integer.parseInt(pos[1]), Integer.parseInt(pos[2]));
         } else {
-            if (position.isEmpty()) {
-                return player.getBlockPos();
+            if (nbt == null) {
+                if (position.isEmpty()) {
+                    return player.getBlockPos();
+                } else {
+                    return null;
+                }
             } else {
-                return null;
+                NbtList posList = nbt.getList("pos", NbtElement.INT_TYPE);
+                return new BlockPos(posList.getInt(0), posList.getInt(1), posList.getInt(2));
             }
         }
     }
 
-    public static CustomForm.Builder editHome(ServerPlayerEntity player, Form previousForm, NbtCompound nbt, String... args) {
-        return sendForm(player, previousForm, nbt, "Edit:", nbt.getString("name"), nbt.getBoolean("isPublic") ? "visible" : "private", nbt.getString("description"));
+    public static String getDimension(ServerPlayerEntity player, int dim) {
+        var dimension = player.getEntityWorld().getRegistryKey();
+
+        if (dim == 0) {
+            if (dimension.equals(World.OVERWORLD)) {
+                return "overworld";
+            } else if (dimension.equals(World.NETHER)) {
+                return "nether";
+            } else if (dimension.equals(World.END)) {
+                return "end";
+            } else {
+                return "unknown";
+            }
+        } else {
+            if (dim == 1) {
+                return "overworld";
+            } else if (dim == 2) {
+                return "nether";
+            } else if (dim == 3) {
+                return "end";
+            }
+        }
+        return "unknown";
     }
 }

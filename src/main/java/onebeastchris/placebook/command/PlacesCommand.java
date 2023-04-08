@@ -5,14 +5,8 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import onebeastchris.placebook.PlaceBook;
-import onebeastchris.placebook.forms.FilterForm;
 import onebeastchris.placebook.forms.MainForm;
 import onebeastchris.placebook.util.FloodgateUtil;
-import org.geysermc.floodgate.api.FloodgateApi;
-import org.geysermc.floodgate.api.player.FloodgatePlayer;
-
-import java.util.UUID;
 
 import static net.minecraft.server.command.CommandManager.literal;
 

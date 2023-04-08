@@ -1,9 +1,6 @@
 package onebeastchris.placebook.forms;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
 import onebeastchris.placebook.util.PlayerDataCache;
 import org.geysermc.cumulus.component.ButtonComponent;
 import org.geysermc.cumulus.util.FormImage;
@@ -17,31 +14,31 @@ public class ButtonComponentUtil {
         switch (filter) {
             case 0 -> {
                 //all players
-                if (!search.isEmpty()) {
+                if (search.isEmpty()) {
                     return search(search, PlayerDataCache.getAllPlayers());
                 }
                 for (GameProfile name : PlayerDataCache.getAllPlayers()) {
-                    ButtonComponent button = ButtonComponent.of(name.getName(), FormImage.Type.URL, "https://api.tydiumcraft.net/v1/players/skin?uuid=" + name.getId() + "&type=avatar");
+                    ButtonComponent button = ButtonComponent.of(name.getName(), FormImage.Type.URL, PlayerDataCache.TEXTURES.get(name.getId()).getAvatarUrl());
                     buttonMap.put(button, name);
                 }
             }
             case 1 -> {
                 //online players
-                if (!search.isEmpty()) {
+                if (search.isEmpty()) {
                     return search(search, PlayerDataCache.getOnlinePlayers());
                 }
                 for (GameProfile name : PlayerDataCache.getOnlinePlayers()) {
-                    ButtonComponent button = ButtonComponent.of(name.getName(), FormImage.Type.URL, "https://api.tydiumcraft.net/v1/players/skin?uuid=" + name.getId() + "&type=avatar");
+                    ButtonComponent button = ButtonComponent.of(name.getName(), FormImage.Type.URL, PlayerDataCache.TEXTURES.get(name.getId()).getAvatarUrl());
                     buttonMap.put(button, name);
                 }
             }
             case 2 -> {
                 //offline players
-                if (!search.isEmpty()) {
+                if (search.isEmpty()) {
                     return search(search, PlayerDataCache.getOfflinePlayers());
                 }
                 for (GameProfile name : PlayerDataCache.getOfflinePlayers()) {
-                    ButtonComponent button = ButtonComponent.of(name.getName(), FormImage.Type.URL, "https://api.tydiumcraft.net/v1/players/skin?uuid=" + name.getId() + "&type=avatar");
+                    ButtonComponent button = ButtonComponent.of(name.getName(), FormImage.Type.URL, PlayerDataCache.TEXTURES.get(name.getId()).getAvatarUrl());
                     buttonMap.put(button, name);
                 }
             }

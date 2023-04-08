@@ -1,13 +1,20 @@
 package onebeastchris.placebook.util;
 
+import onebeastchris.placebook.PlaceBook;
+import onebeastchris.placebook.forms.PlaceForm;
+
 import java.util.HashMap;
 
 public class ColorUtil {
-    public static HashMap<String, String> colorMap = new HashMap<>();
+    public static HashMap<String, String> colorMap;
+    static {
+        colorMap = new HashMap<>();
+        getColorUtilMap();
+    }
     public static final String[] colorcodes = {"§0", "§1", "§2", "§3", "§4", "§5", "§6", "§8", "§9", "§a", "§b", "§c", "§d", "§e", "§f"};
     public static final String[] colornames = {"black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple", "gold", "dark_gray", "blue", "green", "aqua", "red", "light_purple", "yellow"};
 
-    public ColorUtil() {
+    public static void getColorUtilMap() {
         colorMap.put("black", "§0");
         colorMap.put("dark_blue", "§1");
         colorMap.put("dark_green", "§2");
@@ -24,5 +31,9 @@ public class ColorUtil {
         colorMap.put("light_purple", "§d");
         colorMap.put("yellow", "§e");
         colorMap.put("white", "§f");
+    }
+
+    public static String getColor(String color) {
+        return colorMap.get(color);
     }
 }

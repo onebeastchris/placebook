@@ -21,6 +21,8 @@ public class PlacesForm implements FormInterface {
         List<NbtCompound> placesList = new ArrayList<>();
         List<String> parsed = parseArgs(player, profile, args);
         boolean isOwner = Boolean.parseBoolean(parsed.get(2));
+        boolean isEditor = Boolean.parseBoolean(parsed.get(3));
+        List<String> names = new ArrayList<>();
 
         SimpleForm.Builder placesform = SimpleForm.builder()
                 .title(parsed.get(0))
@@ -29,29 +31,35 @@ public class PlacesForm implements FormInterface {
                     int buttonId = response.clickedButtonId();
                     if (buttonId >= placesList.size()) {
                         if (response.clickedButton().text().equals("Add Place")) {
-                            FloodgateUtil.sendForm(player, addOrEditForm.sendForm(player, form, null).build());
+                            FloodgateUtil.sendForm(player, addOrEditForm.sendForm(player, previousForm, null, -1, names).build());
+                        } else if (response.clickedButton().text().equals("Editor mode")) {
+                            FloodgateUtil.sendForm(player, PlacesForm.sendForm(player, previousForm, profile, "editor").build());
+                        } else if (response.clickedButton().text().equals("Exit editor mode")) {
+                            FloodgateUtil.sendForm(player, PlacesForm.sendForm(player, previousForm, profile).build());
                         } else {
                             FloodgateUtil.sendForm(player, previousForm);
                         }
                     } else {
                         int index = placesList.indexOf(placesList.get(buttonId));
-                        FloodgateUtil.sendForm(player, PlaceForm.sendForm(player, form, placesList.get(buttonId), isOwner, index).build());
+                        FloodgateUtil.sendForm(player, PlaceForm.sendForm(player, form, previousForm, placesList.get(buttonId), isEditor, index, names).build());
                     }
                 });
 
         NbtCompound playerData = PlayerDataCache.getPlayer(profile);
-        if (playerData != null) {
-            NbtList places = playerData.getList("places", 10);
-            for (NbtElement p : places) {
-                NbtCompound place = (NbtCompound) p;
-                String name = place.getString("name");
-                String color = ColorUtil.colorMap.get(place.getString("color"));
-                boolean show = place.getBoolean("visibility") || isOwner;
-                placesList.add(place);
-                placesform.optionalButton(color + name, show);
-            }
+        NbtList places = playerData.getList("places", NbtElement.COMPOUND_TYPE);
+        for (NbtElement p : places) {
+            NbtCompound place = (NbtCompound) p;
+            String name = place.getString("name");
+            String color = place.getString("color");
+            boolean show = place.getBoolean("visibility") || isOwner || isEditor;
+            placesList.add(place);
+            names.add(name);
+            placesform.optionalButton(ColorUtil.getColor(color) + name, show);
         }
-        placesform.optionalButton("Add Place", isOwner);
+        boolean show = placesList.size() < 10 && isOwner; //make sure there are less than 10 places
+        placesform.optionalButton("Add Place", show && !isEditor);
+        placesform.optionalButton("Editor mode", isOwner && !isEditor);
+        placesform.optionalButton("Exit editor mode", isEditor);
         placesform.button("Back");
         return placesform;
     }
@@ -64,13 +72,14 @@ public class PlacesForm implements FormInterface {
         if (args.length == 0) {
             parsed.add(title);
             parsed.add("Click a place to see more");
-            parsed.add(String.valueOf(isOwner));
-            return parsed;
+            parsed.add(String.valueOf(isOwner)); //owner mode on
+            parsed.add("false"); //editor mode off
         } else {
-            parsed.add(title);
-            parsed.add("Select a place to see more");
-            parsed.add("true");
-            return parsed;
+            parsed.add("Edit or delete your places");
+            parsed.add("Select a place to edit or delete it");
+            parsed.add("true"); //owner mode off
+            parsed.add("true"); //editor mode on
         }
+        return parsed;
     }
 }

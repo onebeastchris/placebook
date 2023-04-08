@@ -13,8 +13,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class PlayerDataCache {
-    private static final HashMap<GameProfile, NbtCompound> onlineCache = new HashMap<>();
-    private static final HashMap<GameProfile, NbtCompound> offlineCache = new HashMap<>();
+    private static HashMap<GameProfile, NbtCompound> onlineCache = new HashMap<>();
+    private static HashMap<GameProfile, NbtCompound> offlineCache = new HashMap<>();
+
+    public static HashMap<ServerPlayerEntity, String> messageCache = new HashMap<>();
 
     public static final HashMap<UUID, SkinUtil> TEXTURES = new HashMap<>();
 
@@ -61,11 +63,16 @@ public class PlayerDataCache {
 
     public static NbtCompound getPlayer(GameProfile gameProfile) {
         if (onlineCache.containsKey(gameProfile)) {
+            PlaceBook.debug("Found player: " + gameProfile.getName() + " in online cache");
+            PlaceBook.debug(onlineCache.get(gameProfile).toString());
             return onlineCache.get(gameProfile);
         } else if (offlineCache.containsKey(gameProfile)) {
+            PlaceBook.debug("Found player: " + gameProfile.getName() + " in offline cache");
+            PlaceBook.debug(offlineCache.get(gameProfile).toString());
             return offlineCache.get(gameProfile);
         }
-        return null;
+        PlaceBook.debug("Could not find player: " + gameProfile.getName() + " in any cache");
+        return new NbtCompound();
     }
 
     public static List<GameProfile> getAllPlayers() {

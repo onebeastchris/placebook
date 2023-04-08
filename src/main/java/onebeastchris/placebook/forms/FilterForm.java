@@ -1,13 +1,11 @@
 package onebeastchris.placebook.forms;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import onebeastchris.placebook.PlaceBook;
 import onebeastchris.placebook.util.FloodgateUtil;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.Form;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class FilterForm implements FormInterface{

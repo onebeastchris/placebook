@@ -30,7 +30,6 @@ public class WebUtils {
     private static final String GEYSER_API = "https://api.geysermc.org/v2/xbox/xuid/";
 
     private static JsonObject webRequest(String url) {
-        PlaceBook.debug("Sending request to " + url);
         var client = newHttpClient();
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -64,7 +63,6 @@ public class WebUtils {
             xuid = getXuid(uuid);
         }
         JsonObject json = webRequest(GEYSER_SKIN_API + xuid);
-        PlaceBook.debug("json from BEDROCK texture id web request: " + json);
         if (json.get("message") != null) {
             PlaceBook.LOGGER.error("Error while getting skin for " + uuid + ": " + json.get("message").getAsString());
             return null;
@@ -81,7 +79,6 @@ public class WebUtils {
     private static String getJavaTexture(UUID uuid) {
         JsonObject json = webRequest(MOJANG_PROFILE + uuid.toString().replace("-", ""));
         String texture_id = json.get("properties").getAsJsonArray().get(0).getAsJsonObject().get("value").getAsString();
-        PlaceBook.debug("json from JAVA texture id web request: " + json);
         if (texture_id == null) {
             PlaceBook.LOGGER.error("Error while getting skin for " + uuid + ": " + json.get("message").getAsString());
             return null;
@@ -154,6 +151,6 @@ public class WebUtils {
     }
 
     public static String getAvatarUrl(UUID uuid) {
-        return "https://api.tydiumcraft.net/v1/players/skin?uuid=" + uuid + "&{type=avatar}";
+        return "https://api.tydiumcraft.net/v1/players/skin?uuid=" + uuid + "&type=avatar";
     }
 }
