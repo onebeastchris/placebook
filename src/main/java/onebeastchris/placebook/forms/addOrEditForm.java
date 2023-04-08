@@ -28,6 +28,7 @@ public class addOrEditForm implements FormInterface{
         List<String> argsList = parseArgs(nbtCompound, args);
         boolean isPublic = argsList.get(2).equals("visible");
         boolean isEditor = nbtCompound != null;
+        String currentColor = argsList.get(5);
 
         return CustomForm.builder()
                 .title(argsList.get(0))
@@ -37,7 +38,8 @@ public class addOrEditForm implements FormInterface{
                 .input("Description", argsList.get(3))
                 .input("Position", argsList.get(4))
                 .dropdown("Dimension", "current", "overworld", "nether", "end")
-                .optionalToggle("Keep old description)", true, isEditor)
+                .optionalToggle("Keep old description?", true, isEditor)
+                .optionalToggle("Keep " + currentColor + " as the name color?", true, isEditor)
                 .invalidResultHandler((response) -> {
                     FloodgateUtil.sendForm(player, sendForm(player, previousForm, nbtCompound, index, names,"§4Invalid entries!").build());
                 })
@@ -49,6 +51,7 @@ public class addOrEditForm implements FormInterface{
                     BlockPos position = parsePosition(Objects.requireNonNull(response.next()), player, nbtCompound);
                     int dimension = response.asDropdown();
                     boolean keepOldDescription = Boolean.TRUE.equals(response.next());
+                    boolean keepColor = Boolean.TRUE.equals(response.next());
 
                     if (nbtCompound != null) {
                         NbtCompound edit = PlayerStorage.createHome(name, ColorUtil.colornames[color], description, isVis, position, nbtCompound.getString("dimension"));
@@ -67,6 +70,9 @@ public class addOrEditForm implements FormInterface{
                         }
                         if (keepOldDescription) {
                             description = nbtCompound.getString("description");
+                        }
+                        if (keepColor) {
+                            color = Arrays.asList(ColorUtil.colornames).indexOf(nbtCompound.getString("color"));
                         }
 
                         if (index == -1) {
@@ -101,7 +107,8 @@ public class addOrEditForm implements FormInterface{
                 "Put a name here", //1
                 "visible", //2
                 "Put an optional description here", //3
-                "Empty: Your pos. Or, e.g.: §3-3 §369 §33"}; //4
+                "Empty: Your pos. Or, e.g.: §3-3 §369 §33",//4
+                "chris says hi"}; //5
         if (args.length == 0) {
             return Arrays.asList(def);
         } else {
@@ -117,6 +124,7 @@ public class addOrEditForm implements FormInterface{
                 } else {
                     custom.add(pos.getInt(0) + " " + pos.getInt(1) + " " + pos.getInt(2));
                 }
+                custom.add(nbt.getString("color"));
 
                 for (int i = 0; i < custom.size(); i++) {
                     if (custom.get(i).isEmpty() || custom.get(i).isBlank()) {

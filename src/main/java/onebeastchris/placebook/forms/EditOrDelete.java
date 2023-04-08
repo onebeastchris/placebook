@@ -21,7 +21,7 @@ public class EditOrDelete implements FormInterface {
                     switch (response.clickedButtonId()) {
                         case 0 -> {
                             //edit place
-                            FloodgateUtil.sendForm(player, addOrEditForm.sendForm(player, previousForm, nbtCompound, index, names, "Edit:").build());
+                            FloodgateUtil.sendForm(player, addOrEditForm.sendForm(player, deleteFallBack, nbtCompound, index, names, "Edit:").build());
                         }
                         case 1 -> {
                             //delete place
