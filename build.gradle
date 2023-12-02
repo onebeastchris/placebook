@@ -54,7 +54,7 @@ dependencies {
 	compileOnly("org.geysermc.floodgate:api:2.2.0-SNAPSHOT")
 
 	//PlayerData API
-	modImplementation include("eu.pb4:player-data-api:0.2.2+1.19.3")
+	modImplementation include("eu.pb4:player-data-api:0.4.0+1.20.3")
 
 	//sgui
 	modImplementation include("eu.pb4:sgui:1.2.1+1.19.3")
